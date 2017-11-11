@@ -1,6 +1,9 @@
 #include <stdio.h>
 //#include <stdlib.h> // for exit(0)
+
+// both work:
 #include <counter.h>
+//#include "count_words.deps/counter.h"
 
 int main( int argc, char ** argv )
 {

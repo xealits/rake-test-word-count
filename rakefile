@@ -101,6 +101,23 @@ then:
 2. easy to see the project even with `tree` or similar stuff
 
 OK, doing it.
+
+#include <counter.h>
+clang -I src/count_words.deps/ -c src/count_words.c -o count_words.o
+
+and
+
+#include "count_words.deps/counter.h"
+clang -I src/ -c src/count_words.c -o count_words.o
+
+both work
+
+in any case the rule for rake should be simple
+something like:
+
+rule '.c' [build_dir] => '.deps/*.h' do |task|
+    clang -I '.deps/' -c task.name -o build_dir/task_base_filename.o
+end
 =end
 
 

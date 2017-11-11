@@ -118,6 +118,8 @@ something like:
 rule '.c' [build_dir] => '.deps/*.h' do |task|
     clang -I '.deps/' -c task.name -o build_dir/task_base_filename.o
 end
+
+-- yeah.. the problem is '.c' is rule for _target_file_, not a general task "to compile all these .c"
 =end
 
 

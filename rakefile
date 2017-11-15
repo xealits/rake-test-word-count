@@ -47,9 +47,10 @@ def compile_a_file(source_file, header_files, out_dir)
   end
 end
 
-compile_a_file('src/lexer.c', ['include/lexer.h'], 'build')
-compile_a_file('src/counter.c', ['include/lexer.h', 'include/counter.h'], 'build')
-compile_a_file('src/count_words.c', ['include/counter.h'], 'build')
+#compile_a_file('src/lexer.c', ['include/lexer.h'], 'build')
+#compile_a_file('src/counter.c', ['include/lexer.h', 'include/counter.h'], 'build')
+#compile_a_file('src/count_words.c', ['include/counter.h'], 'build')
+
 =begin
 could a rule do it?
 but here each source file has different dependancy on headers..........
@@ -122,11 +123,56 @@ end
 -- yeah.. the problem is '.c' is rule for _target_file_, not a general task "to compile all these .c"
 =end
 
+#namespace :building do # does nothing? are rules defined in namespace?
+# depends on source and all headers in file.deps/*
+# compiles file.o in the same directory as source
+rule '.o' => proc {|t| FileList[t.ext '.c'] + FileList[t.ext '.deps/*.h']} do |task|
+  sh "clang -I #{task.name.ext '.deps/'} -c #{task.prerequisites.first} -o #{task.name}"
+  # and copy it to build
+  #cp task.name, 'build/'
+  # no, in fact 'build' directory now breaks the logic of the project...
+  # the logic is embedded into the directories..
+  # I have to add "nickname" tasks for build/object.o files...
+end
+#end
+# it seems namespaces don't work with files and rules.............
+# why on earth?
+#
+
+=begin
+#namespace :building do # does nothing? the files are declared in top??
+%w[build/count_words.o build/lexer.o build/counter.o].each do |f|
+  # here it's simple -- all project is in src/
+  # string.pathmap('%f') converts a/b/c/file.txt into file.txt
+  puts f
+  build_file = 'src/' + f.pathmap('%f')
+  puts build_file
+  #build_task = 'building:' + build_file
+  #puts build_task
+
+  # have to explicitly state the namespace in the name of the target file.. strange, maybe old rake? version 10
+  #file 'building:'+f => build_file do |task|
+  file f => 'building:' + build_file do |task|
+    #cp task.prerequisites, task.name
+    cp build_file, f
+    #puts task.name
+    #puts task.prerequisites
+  end
+end
+=end
+
+
+#file 'build/count_words.o' => 
 
 desc 'building final binary'
-file 'build/count_words' => %w[build build/count_words.o build/counter.o build/lexer.o] do
-    sh "clang #{include_dirs_option} build/count_words.o build/lexer.o build/counter.o -lfl -o build/count_words"
+file 'build/count_words' => %w[build src/count_words.o src/counter.o src/lexer.o] do
+    sh "clang #{include_dirs_option} src/count_words.o src/counter.o src/lexer.o -lfl -o build/count_words"
 end
+
+##file 'build/count_words' => %w[build build/count_words.o build/counter.o build/lexer.o] do
+#file 'build/count_words' => %w[build build/count_words.o build/counter.o build/lexer.o] do
+#    sh "clang #{include_dirs_option} build/count_words.o build/lexer.o build/counter.o -lfl -o build/count_words"
+#end
 
 #namespace 'foo' do
 desc 'build everything up to count_words binary'

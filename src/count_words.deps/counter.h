@@ -1,1 +1,1 @@
-../../include/counter.h
+../counter.h
